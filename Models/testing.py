@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load your custom trained model
-model = YOLO("yolov8n.pt")  # or provide full path
+model = YOLO("Models/best.pt")  # or provide full path
 
 # Start webcam (0 is default webcam)
 cap = cv2.VideoCapture(0)
@@ -59,3 +59,4 @@ while True:
 # Release resources
 cap.release()
 cv2.destroyAllWindows()
+
