@@ -6,13 +6,13 @@ model = YOLO("yawn.pt")
 cap = cv2.VideoCapture(0)
 
 if not cap.isOpened():
-    print("❌ Cannot open webcam")
+    print("Cannot open webcam")
     exit()
 
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("❌ Failed to grab frame")
+        print("Failed to grab frame")
         break
 
     results = model.predict(source=frame, stream=True, conf=0.5)
@@ -22,10 +22,9 @@ while True:
             x1, y1, x2, y2 = map(int, box.xyxy[0]) 
             conf = float(box.conf[0])              
             cls_id = int(box.cls[0])
-            print(model.names)
             label = model.names[cls_id]             
 
-            print(f"🎯 Detected: {label} (Class {cls_id}) - Confidence: {conf:.3f} ({conf*100:.1f}%)")
+            print(f"Detected: {label} (Class {cls_id}) - Confidence: {conf:.3f} ({conf*100:.1f}%)")
             
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             text = f"{label}: {conf:.2f}"
