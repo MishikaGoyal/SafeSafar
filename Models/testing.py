@@ -1,15 +1,17 @@
 import cv2
 from ultralytics import YOLO
 import pygame
+import time
 
-# Initialize pygame mixer for playing sound
+# Initialize pygame mixer
 pygame.mixer.init()
-alert_sound = pygame.mixer.Sound("Models\\siren-alert-96052.mp3")  # replace with your own sound file
+alert_sound = pygame.mixer.Sound("C:\\Users\\PRATHAM\\OneDrive\\Desktop\\SafeSafar\\Models\\siren-alert-96052.mp3")
+alert_channel = None  # Channel to manage playback
 
-# Load the YOLOv8 model
-model = YOLO("Models\\testing.py")  # Provide full path if needed
+# Load the YOLO model
+model = YOLO("C:\\Users\\PRATHAM\\OneDrive\\Desktop\\SafeSafar\\Models\\yawn.pt")
 
-# Open the default webcam
+# Open webcam
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("❌ Cannot open webcam")
@@ -23,7 +25,8 @@ while True:
         print("❌ Failed to grab frame")
         break
 
-    # Run YOLOv8 prediction on the frame
+    label_detected = False  # Reset for each frame
+
     results = model.predict(source=frame, stream=True, conf=0.5)
 
     for r in results:
@@ -33,24 +36,32 @@ while True:
             cls_id = int(box.cls[0])
             label = model.names[cls_id]
 
-            # Draw bounding box and label
+            # Draw box & label
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             text = f"{label}: {conf:.2f}"
             cv2.putText(frame, text, (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-            # Print detection info
             print(f"🎯 Detected: {label} (ID: {cls_id}) | Confidence: {conf:.2f}")
 
-            # Example: Trigger alarm for 'drowsy' or specific class
-            if label=='1':
-                print("⚠️ Alert Condition Met - Playing Sound!")
-                pygame.mixer.Sound.play(alert_sound)
+            # If label '1' is detected, set flag
+            if label == '1':
+                label_detected = True
 
-    # Show the result frame
+    # Control alert sound
+    if label_detected:
+        if alert_channel is None or not alert_channel.get_busy():
+            print("⚠️ Alert ON - Playing Sound")
+            alert_channel = alert_sound.play(-1)  # Loop sound
+    else:
+        if alert_channel is not None and alert_channel.get_busy():
+            print("✅ Alert OFF - Stopping Sound")
+            alert_channel.stop()
+            alert_channel = None
+
+    # Show frame
     cv2.imshow("🔍 YOLOv11 Live Detection", frame)
 
-    # Press 'q' to quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
@@ -58,3 +69,4 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 pygame.mixer.quit()
+
